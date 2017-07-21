@@ -1,0 +1,1 @@
+from snakeeyes.celery_example import make_celery

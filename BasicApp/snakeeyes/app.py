@@ -3,7 +3,6 @@ from snakeeyes.tests.extensions import debug_toolbar
 
 from snakeeyes.blueprints.page import page
 
-
 def create_app(settings_override=None):
     """
     Create a Flask application using the app factory pattern.
@@ -25,7 +24,3 @@ def create_app(settings_override=None):
 
 def extension(app):
     debug_toolbar.init_app(app)
-
-if __name__ == '__main__':
-    app = create_app()
-    app.run()
