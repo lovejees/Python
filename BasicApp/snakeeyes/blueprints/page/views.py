@@ -18,5 +18,5 @@ def privacy():
     return render_template('page/privacy.html')
 
 @page.route('/mysite')
-def mypage():
+def mysite():
     return render_template('page/mysite.html')
