@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+#from model.todomodel import Todo
 
 page = Blueprint('page', __name__, template_folder='templates')
 
@@ -20,3 +21,11 @@ def privacy():
 @page.route('/mysite')
 def mysite():
     return render_template('page/mysite.html')
+
+@page.route('/todo')
+def todo():
+    return render_template('page/index.html',todo = Todo.query_all())
+
+@page.route('/new')
+def todonew():
+    return render_template('page/new.html')

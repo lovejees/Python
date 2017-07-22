@@ -2,6 +2,7 @@ from flask import Flask
 from snakeeyes.tests.extensions import debug_toolbar
 
 from snakeeyes.blueprints.page import page
+from snakeeyes.tests.extensions import db
 
 def create_app(settings_override=None):
     """
@@ -24,3 +25,6 @@ def create_app(settings_override=None):
 
 def extension(app):
     debug_toolbar.init_app(app)
+    db.init_app(app)
+
+flaskapp = create_app()
