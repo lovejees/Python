@@ -1,3 +1,6 @@
+"""
+
+
 from snakeeyes.app import flaskapp
 from datetime import datetime
 from flask import Flask, request, flash, url_for, redirect, render_template
@@ -30,9 +33,9 @@ class Todo(db.Model):
         self.pin = pin
 
 
-@flaskapp.route('/l')
+@flaskapp.route('/')
 def show_all():
-    return render_template('show_all.html', students=Todo.query.all())
+    return render_template('<h1>Lol<h1>', students=Todo.query.all())
 
 
 @flaskapp.route('/newl', methods=['GET', 'POST'])
@@ -54,3 +57,5 @@ def new():
 if __name__ == '__main__':
     db.create_all()
     flaskapp.run(debug=True)
+
+"""

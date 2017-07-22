@@ -1,30 +1,59 @@
 from flask import Flask
-from snakeeyes.tests.extensions import debug_toolbar
+from flask import Flask, jsonify, request,abort
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func, Index
+from datetime import datetime, timedelta
+import json
 
-from snakeeyes.blueprints.page import page
-from snakeeyes.tests.extensions import db
+app = Flask(__name__, instance_relative_config=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tiger@localhost:5432/PhoneTool'
 
-def create_app(settings_override=None):
+app.config.from_object('config.settings')
+app.config.from_pyfile('settings.py', silent=True)
+
+db = SQLAlchemy(app)
+
+class Todo(db.Model):
+    __tablename__ = 'todo'
+    id = db.Column('todo_id', db.Integer, primary_key=True)
+    title = db.Column(db.String(60))
+    text = db.Column(db.String)
+    status = db.Column(db.Boolean)
+    pub_date = db.Column(db.DateTime)
+
+    def __init__(self, title, text):
+        self.title = title
+        self.text = text
+        self.status = False
+        self.pub_date = datetime.utcnow()
+
+@app.route('/')
+def index():
     """
-    Create a Flask application using the app factory pattern.
+    Render a Hello World response.
 
-    :return: Flask app
+    :return: Flask response
     """
-    app = Flask(__name__, instance_relative_config=True)
+    return app.config['VALUE']
 
-    app.config.from_object('config.settings')
-    app.config.from_pyfile('settings.py', silent=True)
 
-    if settings_override:
-        app.config.update(settings_override)
+@app.route('/getall',methods = ['GET'])
+def getall():
+    result = Todo.query.first()
+    return jsonify(result.as_dict())
 
-    app.register_blueprint(page)
-   # extension(app)
+@app.route('/new',methods =['POST'])
+def addnew():
+    if not request.json or not 'name' in request.json:
+        abort(400)
+    todo = Todo(request.json.name, request.json.get('hireDate', ''), request.json.get('focus', ''))
+    db.session.add(todo)
+    db.session.commit()
+    return jsonify({'developer': todo}), 201
 
-    return app
 
-def extension(app):
-    debug_toolbar.init_app(app)
-    db.init_app(app)
 
-flaskapp = create_app()
+if __name__ == '__main__':
+    db.create_all()
+    app.run()
