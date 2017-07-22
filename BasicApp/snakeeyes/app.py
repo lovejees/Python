@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request,abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, Index
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,date
 import json
 
 app = Flask(__name__, instance_relative_config=True)
@@ -14,19 +14,28 @@ app.config.from_pyfile('settings.py', silent=True)
 
 db = SQLAlchemy(app)
 
-class Todo(db.Model):
-    __tablename__ = 'todo'
-    id = db.Column('todo_id', db.Integer, primary_key=True)
-    title = db.Column(db.String(60))
-    text = db.Column(db.String)
-    status = db.Column(db.Boolean)
-    pub_date = db.Column(db.DateTime)
+from sqlalchemy.inspection import inspect
 
-    def __init__(self, title, text):
-        self.title = title
-        self.text = text
-        self.status = False
-        self.pub_date = datetime.utcnow()
+class Serializer(object):
+
+    def serialize(self):
+        return {c: getattr(self, c) for c in inspect(self).attrs.keys()}
+
+    @staticmethod
+    def serialize_list(l):
+        return [m.serialize() for m in l]
+
+class Employee(db.Model,Serializer):
+    __tablename__ = 'employee'
+    __privacy__ = ('employee_id','employee_name','parent_id','is_active,age')
+    employee_id = db.Column(db.Integer, primary_key=True)
+    employee_name = db.Column(db.String(60))
+    parent_id = db.Column(db.String)
+    is_active = db.Column(db.Boolean)
+    age  = db.Column(db.Integer)
+
+    def __repr__(self):
+        return '<Employee %r>' % self.age
 
 @app.route('/')
 def index():
@@ -40,17 +49,26 @@ def index():
 
 @app.route('/getall',methods = ['GET'])
 def getall():
-    result = Todo.query.first()
-    return jsonify(result.as_dict())
+    result = Employee.query.all()
+    return jsonify(Employee.serialize_list(result))
 
-@app.route('/new',methods =['POST'])
-def addnew():
-    if not request.json or not 'name' in request.json:
-        abort(400)
-    todo = Todo(request.json.name, request.json.get('hireDate', ''), request.json.get('focus', ''))
-    db.session.add(todo)
-    db.session.commit()
-    return jsonify({'developer': todo}), 201
+@app.route('/tree',methods = ['GET'])
+def gettree():
+    result = Employee.query.all()
+    return jsonify(result)
+
+@app.route('/tree/<jdgflag>',methods = ['GET'])
+def subtree():
+    result = Employee.query.first()
+    return jsonify(result)
+
+@app.route('/shortestpath')
+def shortestpath():
+    return 'lol'
+
+@app.route('/tree',methods =['POST'])
+def settree():
+    return 'SetTree'
 
 
 
