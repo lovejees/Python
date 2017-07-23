@@ -1,77 +1,47 @@
 from flask import Flask
-from flask import Flask, jsonify, request,abort
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import func, Index
-from datetime import datetime, timedelta,date
-import json
+from sqlalchemy.sql.elements import _defer_name
 
-app = Flask(__name__, instance_relative_config=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tiger@localhost:5432/PhoneTool'
+from snakeeyes.blueprints.page import page
+from snakeeyes.extensions import db
 
-app.config.from_object('config.settings')
-app.config.from_pyfile('settings.py', silent=True)
 
-db = SQLAlchemy(app)
-
-from sqlalchemy.inspection import inspect
-
-class Serializer(object):
-
-    def serialize(self):
-        return {c: getattr(self, c) for c in inspect(self).attrs.keys()}
-
-    @staticmethod
-    def serialize_list(l):
-        return [m.serialize() for m in l]
-
-class Employee(db.Model,Serializer):
-    __tablename__ = 'employee'
-    __privacy__ = ('employee_id','employee_name','parent_id','is_active,age')
-    employee_id = db.Column(db.Integer, primary_key=True)
-    employee_name = db.Column(db.String(60))
-    parent_id = db.Column(db.String)
-    is_active = db.Column(db.Boolean)
-    age  = db.Column(db.Integer)
-
-    def __repr__(self):
-        return '<Employee %r>' % self.age
-
-@app.route('/')
-def index():
+def create_app(settings_override=None):
     """
-    Render a Hello World response.
+    Create a Flask application using the app factory pattern.
 
-    :return: Flask response
+    :param settings_override: Override settings
+    :return: Flask app
     """
-    return app.config['VALUE']
+    app = Flask(__name__, instance_relative_config=True)
+
+    app.config.from_object('config.settings')
+    app.config.from_pyfile('settings.py', silent=True)
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tiger@localhost:5432/PhoneTool'
+
+    if settings_override:
+        app.config.update(settings_override)
+
+    app.register_blueprint(page)
+    extensions(app)
+
+    return app
 
 
-@app.route('/getall',methods = ['GET'])
-def getall():
-    result = Employee.query.all()
-    return jsonify(Employee.serialize_list(result))
+def extensions(app):
+    """
+    Register 0 or more extensions (mutates the app passed in).
 
-@app.route('/tree',methods = ['GET'])
-def gettree():
-    result = Employee.query.all()
-    return jsonify(result)
+    :param app: Flask application instance
+    :return: None
+    """
+    db.init_app(app)
 
-@app.route('/tree/<jdgflag>',methods = ['GET'])
-def subtree():
-    result = Employee.query.first()
-    return jsonify(result)
-
-@app.route('/shortestpath')
-def shortestpath():
-    return 'lol'
-
-@app.route('/tree',methods =['POST'])
-def settree():
-    return 'SetTree'
-
-
+    return None
 
 if __name__ == '__main__':
-    db.create_all()
+    app = create_app()
     app.run()
+
+
+

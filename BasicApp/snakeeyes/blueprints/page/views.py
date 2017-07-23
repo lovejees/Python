@@ -1,31 +1,10 @@
 from flask import Blueprint, render_template
-#from model.todomodel import Todo
+from snakeeyes.blueprints.User.model import Employee
 
 page = Blueprint('page', __name__, template_folder='templates')
 
 
-@page.route('/')
+@page.route('/getall',methods=['GET'])
 def home():
-    return render_template('page/home.html')
+    return Employee.getall()
 
-
-@page.route('/terms')
-def terms():
-    return render_template('page/terms.html')
-
-
-@page.route('/privacy')
-def privacy():
-    return render_template('page/privacy.html')
-
-@page.route('/mysite')
-def mysite():
-    return render_template('page/mysite.html')
-
-@page.route('/todo')
-def todo():
-    return render_template('page/index.html',todo = Todo.query_all())
-
-@page.route('/new')
-def todonew():
-    return render_template('page/new.html')
