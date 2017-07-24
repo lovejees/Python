@@ -14,10 +14,10 @@ def to_json(result):
     ls= []
     for emp in result:
         dc = {}
-        if(emp.parent_id == None):
+        if(emp.employee_id == None):
             empId = None
         else:
-            empId = int(emp.parent_id)
+            empId = int(emp.employee_id)
 
         if (emp.parent_id == None):
             parId = None
@@ -56,25 +56,48 @@ class Employee(db.Model,ResourceMixin):
 
     @classmethod
     def getall(cls):
-         current_app.logger.debug('get all api called')
+       #  current_app.logger.debug('get all api called')
          result = Employee.query.all()
          return to_json(result)
 
     @classmethod
-    def getsubtree(cls):
-        return None
+    def getsubtree(cls,empId,isjoindateflag):
+        sql =  text("WITH RECURSIVE subordinates AS "+
+         "(SELECT employee_id,parent_id,employee_name,join_date FROM employee WHERE employee_id = :id"
+         " UNION SELECT e.employee_id, e.parent_id, e.employee_name,e.join_date FROM employee e "+
+         "INNER JOIN subordinates s ON s.employee_id = e.parent_id) SELECT employee_name,parent_id,employee_id  FROM subordinates"+
+                    " where employee_id <> :id")
+        if(isjoindateflag == True):
+            sql = text("WITH RECURSIVE subordinates AS "+
+         "(SELECT employee_id,parent_id,employee_name,join_date FROM employee WHERE employee_id = :id"
+         " UNION SELECT e.employee_id, e.parent_id, e.employee_name,e.join_date FROM employee e "+
+         "INNER JOIN subordinates s ON s.employee_id = e.parent_id) SELECT employee_name,parent_id,employee_id  FROM subordinates"+
+                    " where employee_id <> :id  and join_date > (select join_date from employee where employee_id = :id)")
+
+
+        results = db.session.query(Employee).from_statement(sql).params(id=empId).all()
+        return to_json(results)
 
     @classmethod
-    def gettree(cls,employeeId):
-         results = db.session.query(Employee).from_statement(
-            text("WITH RECURSIVE subordinates AS (SELECT employee_id,parent_id,employee_name,join_date FROM employee WHERE employee_id = 1000 UNION SELECT e.employee_id, e.parent_id, e.employee_name,e.join_date FROM employee e INNER JOIN subordinates s ON s.employee_id = e.parent_id) SELECT employee_name,parent_id,employee_id  FROM subordinates")). \
-            params(id=1000).all()
-         return to_json(results)
+    def gettree(cls,empId):
+        sql =  text("WITH RECURSIVE subordinates AS "+
+             "(SELECT employee_id,parent_id,employee_name,join_date FROM employee WHERE employee_id = :id"
+             " UNION SELECT e.employee_id, e.parent_id, e.employee_name,e.join_date FROM employee e "+
+             "INNER JOIN subordinates s ON s.employee_id = e.parent_id) SELECT employee_name,parent_id,employee_id  FROM subordinates")
+
+        results = db.session.query(Employee).from_statement(sql).params(id=empId).all()
+        return to_json(results)
 
 
     @classmethod
-    def getshortesttree(cls):
-        return None
+    def getancestorpath(cls,empId):
+        sql = text("WITH RECURSIVE subordinates AS "+
+                   "(SELECT employee_id,parent_id,employee_name,join_date FROM employee WHERE employee_id = :id "+
+                   "UNION SELECT e.employee_id, e.parent_id, e.employee_name,e.join_date FROM employee e INNER JOIN "+
+                   "subordinates s ON s.parent_id = e.employee_id)SELECT employee_name,parent_id,employee_id,join_date FROM subordinates")
+
+        results = db.session.query(Employee).from_statement(sql).params(id=empId).all()
+        return results
 
     @classmethod
     def setitem(cls,emp):

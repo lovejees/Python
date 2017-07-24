@@ -17,3 +17,6 @@ flask-debugtoolbar == 0.10.1
 # Data and workers.
 psycopg2==2.7.1
 Flask-SQLAlchemy==2.1
+
+#Graph Libraries
+networkx == 1.10
