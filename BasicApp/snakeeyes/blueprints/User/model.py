@@ -2,6 +2,8 @@ from snakeeyes.extensions import db
 from flask import current_app,jsonify
 from lib.util_sqlalchemy import ResourceMixin
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import aliased
+from sqlalchemy import text
 import json
 
 
@@ -61,13 +63,34 @@ class Employee(db.Model,ResourceMixin):
 
     @classmethod
     def getsubtree(cls):
-        result = Employee.filter
         return None
 
     @classmethod
-    def gettree(cls):
+    def gettree(cls,employeeId):
+       # sql = text("select * from employee")
+       # result = db.engine.execute(sql)
 
-        return
+       included_parts = db.session.query(
+           Employee.parent_id,
+           Employee.employee_id,).\
+           filter(Employee.employee_id == 1000). \
+           cte(name="included_parts", recursive=True)
+
+       incl_alias = aliased(included_parts, name="pr")
+       parts_alias = aliased(Employee, name="p")
+
+       included_parts = included_parts.union_all(
+           db.session.query(
+               parts_alias.parent_id,
+               parts_alias.employee_id). \
+               filter(parts_alias.parent_id == incl_alias.c.employee_id)
+       )
+
+       q = db.session.query(
+           included_parts.c.employee_id
+       )
+
+       return to_json(q)
 
     @classmethod
     def getshortesttree(cls):

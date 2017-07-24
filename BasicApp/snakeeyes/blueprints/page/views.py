@@ -10,7 +10,7 @@ def getall():
 
 @page.route('/gettree',methods=['GET'])
 def gettree():
-    return Employee.gettree()
+    return Employee.gettree(request.args.get('employeeId'))
 
 @page.route('/getsubtree',methods=['GET'])
 def getsubtree():
