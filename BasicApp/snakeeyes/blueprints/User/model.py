@@ -1,29 +1,33 @@
 from snakeeyes.extensions import db
-from flask import current_app
+from flask import current_app,jsonify
 from lib.util_sqlalchemy import ResourceMixin
+from sqlalchemy.exc import IntegrityError
 import json
 
 
-def to_json(inst, cls):
+def to_json(result):
     """
     Jsonify the sql alchemy query result.
     """
-    convert = dict()
-    # add your coversions for things like datetime's
-    # and what-not that aren't serializable.
-    d = dict()
-    for c in cls.__table__.columns:
-        v = getattr(inst, c.name)
-        if c.type in convert.keys() and v is not None:
-            try:
-                d[c.name] = convert[c.type](v)
-            except:
-                d[c.name] = "Error:  Failed to covert using ", str(convert[c.type])
-        elif v is None:
-            d[c.name] = str()
+    res = {}
+    ls= []
+    for emp in result:
+        dc = {}
+        if(emp.parent_id == None):
+            empId = None
         else:
-            d[c.name] = v
-    return json.dumps(d)
+            empId = int(emp.parent_id)
+
+        if (emp.parent_id == None):
+            parId = None
+        else:
+            parId = int(emp.parent_id)
+
+        dc = {"name" : emp.employee_name,"parentId" : parId,"id" : empId }
+        ls.append(dc)
+    res={'result':ls}
+    return json.dumps(res)
+
 
 class Employee(db.Model,ResourceMixin):
     __tablename__ = 'employee'
@@ -32,36 +36,51 @@ class Employee(db.Model,ResourceMixin):
     parent_id = db.Column(db.String)
     is_active = db.Column(db.Boolean)
     age = db.Column(db.Integer)
+    join_date = db.Column(db.Date)
 
-    def __init__(self,employee_id,employee_name,parent_id,is_active,age):
+    def __init__(self,employee_id,employee_name,parent_id,is_active,age,join_date):
         # Call Flask-SQLAlchemy's constructor.
         self.employee_id = employee_id
         self.employee_name = employee_name
         self.parent_id = parent_id
         self.is_active = is_active
         self.age = age
+        self.join_date = join_date
+
+    def __init__(self,employee_id,employee_name,parent_id):
+        # Call Flask-SQLAlchemy's constructor.
+        self.employee_id = employee_id
+        self.employee_name = employee_name
+        self.parent_id = parent_id
 
     @classmethod
     def getall(cls):
-
-         current_app.logger.debug('log message')
+         current_app.logger.debug('get all api called')
          result = Employee.query.all()
-         return 'LoL'
+         return to_json(result)
 
     @classmethod
     def getsubtree(cls):
-
+        result = Employee.filter
         return None
 
     @classmethod
     def gettree(cls):
 
-        return None
+        return
 
     @classmethod
     def getshortesttree(cls):
         return None
 
     @classmethod
-    def setitem(cls):
-        return None
+    def setitem(cls,emp):
+        e = Employee.query.get(emp.employee_id)
+        if(e != None):
+            e.employee_name = emp.employee_name
+            db.session.commit()
+            return jsonify({"status": 201})
+        else:
+            Employee.save(emp)
+            return jsonify({"status":200})
+

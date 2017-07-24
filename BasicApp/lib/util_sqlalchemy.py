@@ -23,6 +23,7 @@ class ResourceMixin(object):
         db.session.delete(self)
         return db.session.commit()
 
+
     def __str__(self):
         """
         Create a human readable version of a class instance.
