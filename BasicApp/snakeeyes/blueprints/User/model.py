@@ -4,6 +4,7 @@ from lib.util import Utils
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 import json
+from flask import jsonify
 
 """
 
@@ -106,9 +107,22 @@ class Employee(db.Model,ResourceMixin):
         e = Employee.query.get(emp.employee_id)
         if(e != None):
             e.employee_name = emp.employee_name
+            e.id = emp.id
+            e.parent_id = emp.parent_id
             db.session.commit()
-            return json.dumps({"status": 200})
+            return json.dumps({"status": "insert successful"})
         else:
             Employee.save(emp)
-            return json.dumps({"status":200})
+            return json.dumps({"status": "update successful"})
+
+    @classmethod
+    def delitem(cls,employee_id):
+        e = Employee.query.get(employee_id)
+        if(e != None):
+            try:
+                Employee.delete(e)
+            except Exception :
+                return jsonify({"status" : "failed"})
+        return jsonify({"status": "success"})
+
 
