@@ -1,15 +1,17 @@
 from snakeeyes.extensions import db
-from flask import current_app,jsonify
 from lib.util_sqlalchemy import ResourceMixin
+from lib.util import Utils
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 import json
 
+"""
+
 
 def to_json(result):
-    """
+    
     Jsonify the sql alchemy query result.
-    """
+    
     res = {}
     ls= []
     for emp in result:
@@ -28,7 +30,7 @@ def to_json(result):
         ls.append(dc)
     res={'result':ls}
     return json.dumps(res)
-
+"""
 
 class Employee(db.Model,ResourceMixin):
     __tablename__ = 'employee'
@@ -58,7 +60,7 @@ class Employee(db.Model,ResourceMixin):
     def getall(cls):
        #  current_app.logger.debug('get all api called')
          result = Employee.query.all()
-         return to_json(result)
+         return Utils.todict(result)
 
     @classmethod
     def getsubtree(cls,empId,isjoindateflag):
@@ -75,8 +77,8 @@ class Employee(db.Model,ResourceMixin):
                     " where employee_id <> :id  and join_date > (select join_date from employee where employee_id = :id)")
 
 
-        results = db.session.query(Employee).from_statement(sql).params(id=empId).all()
-        return to_json(results)
+        result = db.session.query(Employee).from_statement(sql).params(id=empId).all()
+        return Utils.todict(result)
 
     @classmethod
     def gettree(cls,empId):
@@ -85,8 +87,8 @@ class Employee(db.Model,ResourceMixin):
              " UNION SELECT e.employee_id, e.parent_id, e.employee_name,e.join_date FROM employee e "+
              "INNER JOIN subordinates s ON s.employee_id = e.parent_id) SELECT employee_name,parent_id,employee_id  FROM subordinates")
 
-        results = db.session.query(Employee).from_statement(sql).params(id=empId).all()
-        return to_json(results)
+        result = db.session.query(Employee).from_statement(sql).params(id=empId).all()
+        return Utils.todict(result)
 
 
     @classmethod
@@ -96,8 +98,8 @@ class Employee(db.Model,ResourceMixin):
                    "UNION SELECT e.employee_id, e.parent_id, e.employee_name,e.join_date FROM employee e INNER JOIN "+
                    "subordinates s ON s.parent_id = e.employee_id)SELECT employee_name,parent_id,employee_id,join_date FROM subordinates")
 
-        results = db.session.query(Employee).from_statement(sql).params(id=empId).all()
-        return results
+        result = db.session.query(Employee).from_statement(sql).params(id=empId).all()
+        return result
 
     @classmethod
     def setitem(cls,emp):
@@ -105,8 +107,8 @@ class Employee(db.Model,ResourceMixin):
         if(e != None):
             e.employee_name = emp.employee_name
             db.session.commit()
-            return jsonify({"status": 201})
+            return json.dumps({"status": 200})
         else:
             Employee.save(emp)
-            return jsonify({"status":200})
+            return json.dumps({"status":200})
 
