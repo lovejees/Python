@@ -1,7 +1,6 @@
 from snakeeyes.extensions import db
 from lib.util_sqlalchemy import ResourceMixin
 from lib.util import Utils
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 import json
 from flask import jsonify
