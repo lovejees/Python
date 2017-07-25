@@ -1,24 +1,27 @@
 from flask import url_for
 
-"""
 class TestPage(object):
-    def test_home_page(self, client):
-      #   Home page should respond with a success 200. 
-        response = client.get(url_for('page.home'))
+
+    def test_getall_api(self, client):
+        response = client.get(url_for('page.getall'))
+        assert response.status_code == 200
+        assert response.
+
+    def test_gettree_api(self, client):
+        response = client.get("http://localhost/gettree?emp=1000")
         assert response.status_code == 200
 
-    def test_terms_page(self, client):
-        # Terms page should respond with a success 200. 
-        response = client.get(url_for('page.terms'))
+    def test_getsubtree_api(self, client):
+        response = client.get("http://localhost/getsubtree?emp=1000")
         assert response.status_code == 200
 
-    def test_privacy_page(self, client):
-        # Privacy page should respond with a success 200. 
-        response = client.get(url_for('page.privacy'))
+    def test_getsubtree_withjoiningdate_greater_api(self, client):
+        response = client.get("http://localhost/getsubtree?emp=1000&&isjdflag=True")
         assert response.status_code == 200
 
-    def test_mysite_page(self, client):
-        response = client.get(url_for('page.mysite'))
+    def test_getshortestpath_api(self, client):
+        response = client.get("http://localhost/getshortestpath?emp1=1015&&emp2=1045")
         assert response.status_code == 200
-        
-"""
+
+
+
