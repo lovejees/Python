@@ -5,7 +5,7 @@ class TestPage(object):
     def test_getall_api(self, client):
         response = client.get(url_for('page.getall'))
         assert response.status_code == 200
-        assert response.
+
 
     def test_gettree_api(self, client):
         response = client.get("http://localhost/gettree?emp=1000")
